@@ -1,3 +1,5 @@
+use frame_support::inherent::Vec;
+
 pub trait ValidatorSetStorageProvider<AccountId> {
 	fn validators() -> Vec<AccountId>;
 
