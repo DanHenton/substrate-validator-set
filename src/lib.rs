@@ -12,6 +12,7 @@
 //! (queuing + applying).
 
 #![cfg_attr(not(feature = "std"), no_std)]
+pub mod traits;
 
 mod mock;
 mod tests;
@@ -157,7 +158,10 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(who == validator_id, Error::<T>::BadOrigin);
-			ensure!(<ApprovedValidators<T>>::get().contains(&validator_id), Error::<T>::ValidatorNotApproved);
+			ensure!(
+				<ApprovedValidators<T>>::get().contains(&validator_id),
+				Error::<T>::ValidatorNotApproved
+			);
 
 			Self::do_add_validator(validator_id)?;
 
@@ -168,7 +172,10 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	fn initialize_validators(validators: &[T::AccountId]) {
-		assert!(validators.len() as u32 >= T::MinAuthorities::get(), "Initial set of validators must be at least T::MinAuthorities");
+		assert!(
+			validators.len() as u32 >= T::MinAuthorities::get(),
+			"Initial set of validators must be at least T::MinAuthorities"
+		);
 		assert!(<Validators<T>>::get().is_empty(), "Validators are already initialized!");
 
 		<Validators<T>>::put(validators);
@@ -327,5 +334,19 @@ impl<T: Config, O: Offence<(T::AccountId, T::AccountId)>>
 		_time_slot: &O::TimeSlot,
 	) -> bool {
 		false
+	}
+}
+
+impl<T: Config> traits::ValidatorSetStorageProvider<T::AccountId> for Pallet<T> {
+	fn validators() -> Vec<T::AccountId> {
+		Pallet::<T>::validators()
+	}
+
+	fn approved_validators() -> Vec<T::AccountId> {
+		Pallet::<T>::approved_validators()
+	}
+
+	fn offline_validators() -> Vec<T::AccountId> {
+		Pallet::<T>::offline_validators()
 	}
 }
